@@ -1,0 +1,921 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>कैमरा प्रोजेक्टर - फिक्स्ड बटन</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary: #8e44ad;
+            --secondary: #3498db;
+            --danger: #e74c3c;
+            --success: #2ecc71;
+            --warning: #f39c12;
+            --dark: #2c3e50;
+            --light: #ecf0f1;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            color: #333;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 15px 40px rgba(0,0,0,0.3);
+            overflow: hidden;
+            animation: fadeIn 0.8s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .header {
+            background: linear-gradient(135deg, var(--dark) 0%, #34495e 100%);
+            color: white;
+            padding: 25px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 5px;
+            background: linear-gradient(90deg, var(--primary), var(--secondary), var(--success));
+        }
+
+        .header h1 {
+            font-size: 2.2em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .upload-section {
+            background: #f8f9fa;
+            padding: 25px;
+            margin: 20px;
+            border-radius: 15px;
+            border: 3px dashed #bdc3c7;
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+
+        .upload-section.active {
+            border-color: var(--success);
+            background: #f0fff4;
+        }
+
+        .upload-area {
+            padding: 40px;
+            border: 2px dashed #3498db;
+            border-radius: 10px;
+            background: white;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-bottom: 20px;
+            position: relative;
+        }
+
+        .upload-area:hover {
+            background: #e8f4f8;
+            border-color: var(--primary);
+            transform: scale(1.02);
+        }
+
+        .upload-icon {
+            font-size: 3em;
+            color: #3498db;
+            margin-bottom: 15px;
+        }
+
+        .upload-text {
+            font-size: 1.3em;
+            margin-bottom: 10px;
+            font-weight: 600;
+        }
+
+        .upload-subtext {
+            color: #7f8c8d;
+            font-size: 1em;
+            margin-bottom: 15px;
+        }
+
+        .upload-buttons {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin-top: 20px;
+        }
+
+        .btn {
+            padding: 12px 25px;
+            border: none;
+            border-radius: 25px;
+            background: var(--primary);
+            color: white;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.3);
+        }
+
+        .btn:active {
+            transform: translateY(0);
+        }
+
+        .btn-success { background: var(--success); }
+        .btn-info { background: var(--secondary); }
+        .btn-warning { background: var(--warning); }
+        .btn-danger { background: var(--danger); }
+        .btn-dark { background: var(--dark); }
+
+        .file-input-wrapper {
+            position: relative;
+            display: inline-block;
+            margin: 10px;
+        }
+
+        .file-input-wrapper input[type="file"] {
+            position: absolute;
+            left: 0;
+            top: 0;
+            opacity: 0;
+            width: 100%;
+            height: 100%;
+            cursor: pointer;
+        }
+
+        .preview-section {
+            padding: 20px;
+            text-align: center;
+        }
+
+        .preview-container {
+            background: #2c3e50;
+            border-radius: 15px;
+            padding: 20px;
+            margin: 0 auto;
+            max-width: 800px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            min-height: 400px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }
+
+        #previewDisplay {
+            max-width: 100%;
+            max-height: 500px;
+            border-radius: 10px;
+            display: none;
+        }
+
+        #cameraView {
+            max-width: 100%;
+            max-height: 500px;
+            border-radius: 10px;
+            display: none;
+        }
+
+        #liveCameraView {
+            max-width: 100%;
+            max-height: 500px;
+            border-radius: 10px;
+            display: none;
+            transform: scaleX(-1); /* Mirror effect for front camera */
+        }
+
+        .empty-preview {
+            padding: 60px 20px;
+            color: #bdc3c7;
+            text-align: center;
+        }
+
+        .empty-preview i {
+            font-size: 4em;
+            margin-bottom: 20px;
+        }
+
+        .file-list {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            margin: 20px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            display: none;
+        }
+
+        .file-list h3 {
+            margin-bottom: 15px;
+            color: var(--dark);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .file-items {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+
+        .file-item {
+            background: #f8f9fa;
+            border: 2px solid #dee2e6;
+            border-radius: 10px;
+            padding: 12px 18px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            min-width: 200px;
+        }
+
+        .file-item:hover {
+            background: #e9ecef;
+            transform: translateY(-2px);
+            border-color: var(--primary);
+        }
+
+        .file-item.active {
+            background: var(--primary);
+            color: white;
+            border-color: var(--primary);
+        }
+
+        .status-bar {
+            background: var(--dark);
+            color: white;
+            padding: 15px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 14px;
+        }
+
+        .status-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .camera-controls {
+            background: #34495e;
+            padding: 15px;
+            margin: 15px 20px;
+            border-radius: 10px;
+            display: none;
+        }
+
+        .camera-controls h3 {
+            color: white;
+            margin-bottom: 10px;
+            text-align: center;
+        }
+
+        .camera-buttons {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .feedback {
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 8px;
+            text-align: center;
+            display: none;
+        }
+
+        .feedback-success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .feedback-error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .feedback-info {
+            background: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+
+        .loader {
+            display: none;
+            width: 40px;
+            height: 40px;
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid var(--primary);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 20px auto;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        @media (max-width: 768px) {
+            .header h1 { font-size: 1.8em; }
+            .upload-area { padding: 25px; }
+            .upload-buttons, .camera-buttons { flex-direction: column; align-items: center; }
+            .upload-buttons .btn, .camera-buttons .btn { width: 100%; max-width: 280px; justify-content: center; }
+            .status-bar { flex-direction: column; gap: 10px; align-items: flex-start; }
+            .file-items { flex-direction: column; }
+            .file-item { min-width: auto; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1><i class="fas fa-camera"></i> कैमरा प्रोजेक्टर - फिक्स्ड</h1>
+            <p>"कैमरा पर दिखाए" बटन अब काम करेगा</p>
+        </div>
+
+        <div class="upload-section" id="uploadSection">
+            <h2><i class="fas fa-cloud-upload-alt"></i> इमेज या वीडियो अपलोड करें</h2>
+            
+            <div class="upload-area" id="uploadArea">
+                <div class="upload-icon">
+                    <i class="fas fa-file-upload"></i>
+                </div>
+                <div class="upload-text">
+                    यहाँ क्लिक करें या फाइल ड्रैग करें
+                </div>
+                <div class="upload-subtext">
+                    JPEG, PNG, GIF, MP4, WebM फाइल्स सपोर्टेड
+                </div>
+                
+                <div class="upload-buttons">
+                    <div class="file-input-wrapper">
+                        <button class="btn btn-success">
+                            <i class="fas fa-images"></i> इमेज्स चुनें
+                        </button>
+                        <input type="file" id="imageInput" accept="image/*" multiple>
+                    </div>
+                    
+                    <div class="file-input-wrapper">
+                        <button class="btn btn-info">
+                            <i class="fas fa-video"></i> वीडियो चुनें
+                        </button>
+                        <input type="file" id="videoInput" accept="video/*" multiple>
+                    </div>
+                </div>
+            </div>
+
+            <div class="feedback" id="uploadFeedback"></div>
+            
+            <div class="loader" id="loader"></div>
+        </div>
+
+        <div class="file-list" id="fileList">
+            <h3><i class="fas fa-images"></i> अपलोड की गई फाइल्स</h3>
+            <div class="file-items" id="fileItems">
+                <!-- Files will be added here dynamically -->
+            </div>
+        </div>
+
+        <div class="camera-controls" id="cameraControls">
+            <h3><i class="fas fa-camera"></i> कैमरा कंट्रोल्स</h3>
+            <div class="camera-buttons">
+                <button class="btn btn-success" onclick="startLiveCamera('user')">
+                    <i class="fas fa-mobile-alt"></i> फ्रंट कैमरा
+                </button>
+                <button class="btn btn-info" onclick="startLiveCamera('environment')">
+                    <i class="fas fa-camera"></i> रियर कैमरा
+                </button>
+                <button class="btn btn-danger" onclick="stopLiveCamera()">
+                    <i class="fas fa-stop"></i> कैमरा बंद करें
+                </button>
+            </div>
+        </div>
+
+        <div class="preview-section">
+            <div class="preview-container">
+                <div class="empty-preview" id="emptyPreview">
+                    <i class="fas fa-desktop"></i>
+                    <h3>प्रीव्यू एरिया</h3>
+                    <p>अपलोड की गई इमेज/वीडियो या लाइव कैमरा यहाँ दिखेगा</p>
+                </div>
+                
+                <img id="previewDisplay" alt="Image Preview">
+                <video id="cameraView" controls></video>
+                <video id="liveCameraView" autoplay playsinline></video>
+            </div>
+
+            <div class="feedback" id="actionFeedback"></div>
+
+            <div class="upload-buttons">
+                <button class="btn btn-success" onclick="startProjector()" id="projectorBtn">
+                    <i class="fas fa-play"></i> प्रोजेक्टर शुरू करें
+                </button>
+                <button class="btn btn-info" onclick="showOnCamera()" id="cameraBtn">
+                    <i class="fas fa-camera"></i> कैमरा पर दिखाएं
+                </button>
+                <button class="btn btn-warning" onclick="toggleLiveCamera()" id="liveCameraBtn">
+                    <i class="fas fa-video"></i> लाइव कैमरा चालू करें
+                </button>
+                <button class="btn btn-danger" onclick="clearAll()">
+                    <i class="fas fa-trash"></i> सब साफ करें
+                </button>
+            </div>
+        </div>
+
+        <div class="status-bar">
+            <div class="status-item">
+                <i class="fas fa-file"></i>
+                <span id="fileStatus">कोई फाइल नहीं</span>
+            </div>
+            <div class="status-item">
+                <i class="fas fa-camera"></i>
+                <span id="cameraStatus">कैमरा: बंद</span>
+            </div>
+            <div class="status-item">
+                <i class="fas fa-projector"></i>
+                <span id="projectorStatus">प्रोजेक्टर: बंद</span>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Elements
+        const imageInput = document.getElementById('imageInput');
+        const videoInput = document.getElementById('videoInput');
+        const uploadArea = document.getElementById('uploadArea');
+        const uploadSection = document.getElementById('uploadSection');
+        const previewDisplay = document.getElementById('previewDisplay');
+        const cameraView = document.getElementById('cameraView');
+        const liveCameraView = document.getElementById('liveCameraView');
+        const emptyPreview = document.getElementById('emptyPreview');
+        const fileList = document.getElementById('fileList');
+        const fileItems = document.getElementById('fileItems');
+        const loader = document.getElementById('loader');
+        const fileStatus = document.getElementById('fileStatus');
+        const cameraStatus = document.getElementById('cameraStatus');
+        const projectorStatus = document.getElementById('projectorStatus');
+        const uploadFeedback = document.getElementById('uploadFeedback');
+        const actionFeedback = document.getElementById('actionFeedback');
+        const cameraControls = document.getElementById('cameraControls');
+        const cameraBtn = document.getElementById('cameraBtn');
+        const liveCameraBtn = document.getElementById('liveCameraBtn');
+        const projectorBtn = document.getElementById('projectorBtn');
+
+        // Variables
+        let uploadedFiles = [];
+        let currentFileIndex = -1;
+        let isProjectorActive = false;
+        let isCameraActive = false;
+        let liveStream = null;
+
+        // Show feedback message
+        function showFeedback(message, type, element = 'action') {
+            const feedbackElement = element === 'upload' ? uploadFeedback : actionFeedback;
+            feedbackElement.textContent = message;
+            feedbackElement.className = 'feedback';
+            
+            if (type === 'success') {
+                feedbackElement.classList.add('feedback-success');
+            } else if (type === 'error') {
+                feedbackElement.classList.add('feedback-error');
+            } else {
+                feedbackElement.classList.add('feedback-info');
+            }
+            
+            feedbackElement.style.display = 'block';
+            
+            setTimeout(() => {
+                feedbackElement.style.display = 'none';
+            }, 5000);
+        }
+
+        // Initialize event listeners
+        function initializeEventListeners() {
+            console.log('Event listeners initializing...');
+            
+            // File input change events
+            imageInput.addEventListener('change', function(e) {
+                console.log('Image input changed:', e.target.files.length, 'files');
+                handleFileInput(e.target.files, 'image');
+            });
+            
+            videoInput.addEventListener('change', function(e) {
+                console.log('Video input changed:', e.target.files.length, 'files');
+                handleFileInput(e.target.files, 'video');
+            });
+            
+            // Drag and drop events
+            uploadArea.addEventListener('dragover', function(e) {
+                e.preventDefault();
+                uploadArea.style.background = '#e8f4f8';
+                uploadArea.style.borderColor = '#8e44ad';
+            });
+            
+            uploadArea.addEventListener('dragleave', function(e) {
+                e.preventDefault();
+                uploadArea.style.background = 'white';
+                uploadArea.style.borderColor = '#3498db';
+            });
+            
+            uploadArea.addEventListener('drop', function(e) {
+                e.preventDefault();
+                console.log('File dropped:', e.dataTransfer.files.length, 'files');
+                uploadArea.style.background = 'white';
+                uploadArea.style.borderColor = '#3498db';
+                handleFileInput(e.dataTransfer.files, 'all');
+            });
+            
+            // Click event for upload area
+            uploadArea.addEventListener('click', function(e) {
+                if (e.target === uploadArea) {
+                    imageInput.click();
+                }
+            });
+
+            // Add click event listeners to buttons to verify they're working
+            cameraBtn.addEventListener('click', function() {
+                console.log('Camera button clicked');
+                showOnCamera();
+            });
+
+            liveCameraBtn.addEventListener('click', function() {
+                console.log('Live camera button clicked');
+                toggleLiveCamera();
+            });
+
+            projectorBtn.addEventListener('click', function() {
+                console.log('Projector button clicked');
+                startProjector();
+            });
+
+            console.log('All event listeners initialized successfully');
+        }
+
+        // Handle file input
+        function handleFileInput(files, type) {
+            if (!files || files.length === 0) {
+                showFeedback('कोई फाइल नहीं चुनी गई', 'error', 'upload');
+                return;
+            }
+            
+            console.log(`Processing ${files.length} files of type: ${type}`);
+            showLoader();
+            
+            let validFiles = 0;
+            
+            for (let i = 0; i < files.length; i++) {
+                const file = files[i];
+                const fileType = file.type.split('/')[0];
+                
+                if (type === 'image' && fileType !== 'image') continue;
+                if (type === 'video' && fileType !== 'video') continue;
+                if (fileType !== 'image' && fileType !== 'video') continue;
+                
+                const fileURL = URL.createObjectURL(file);
+                uploadedFiles.push({
+                    name: file.name,
+                    type: fileType,
+                    url: fileURL,
+                    file: file
+                });
+                
+                validFiles++;
+                console.log(`Added file: ${file.name} (${fileType})`);
+            }
+            
+            hideLoader();
+            
+            if (validFiles > 0) {
+                showFeedback(`${validFiles} फाइल सफलतापूर्वक अपलोड हुई`, 'success', 'upload');
+                updateFileList();
+                
+                if (currentFileIndex === -1) {
+                    selectFile(0);
+                }
+                
+                uploadSection.classList.add('active');
+            } else {
+                showFeedback('कोई वैलिड फाइल नहीं मिली', 'error', 'upload');
+            }
+            
+            // Reset file inputs
+            imageInput.value = '';
+            videoInput.value = '';
+        }
+
+        // Update file list UI
+        function updateFileList() {
+            fileItems.innerHTML = '';
+            
+            if (uploadedFiles.length === 0) {
+                fileList.style.display = 'none';
+                fileStatus.textContent = 'कोई फाइल नहीं';
+                return;
+            }
+            
+            fileList.style.display = 'block';
+            fileStatus.textContent = `${uploadedFiles.length} फाइल अपलोड`;
+            
+            uploadedFiles.forEach((file, index) => {
+                const fileItem = document.createElement('div');
+                fileItem.className = `file-item ${index === currentFileIndex ? 'active' : ''}`;
+                fileItem.innerHTML = `
+                    <i class="fas ${file.type === 'image' ? 'fa-image' : 'fa-video'}"></i>
+                    <span>${file.name}</span>
+                `;
+                fileItem.addEventListener('click', () => {
+                    console.log('File item clicked:', file.name);
+                    selectFile(index);
+                });
+                fileItems.appendChild(fileItem);
+            });
+        }
+
+        // Select a file to display
+        function selectFile(index) {
+            if (index < 0 || index >= uploadedFiles.length) {
+                console.log('Invalid file index:', index);
+                return;
+            }
+            
+            currentFileIndex = index;
+            const file = uploadedFiles[index];
+            
+            console.log('Selected file:', file.name);
+            
+            // Hide all displays
+            previewDisplay.style.display = 'none';
+            cameraView.style.display = 'none';
+            liveCameraView.style.display = 'none';
+            emptyPreview.style.display = 'none';
+            
+            // Show appropriate display
+            if (file.type === 'image') {
+                previewDisplay.src = file.url;
+                previewDisplay.style.display = 'block';
+            } else if (file.type === 'video') {
+                cameraView.src = file.url;
+                cameraView.style.display = 'block';
+            }
+            
+            updateFileList();
+            showFeedback(`"${file.name}" सेलेक्ट किया गया`, 'success');
+        }
+
+        // Start projector mode - FIXED VERSION
+        function startProjector() {
+            console.log('startProjector function called');
+            
+            if (uploadedFiles.length === 0) {
+                showFeedback('पहले कोई इमेज या वीडियो अपलोड करें', 'error');
+                return;
+            }
+            
+            if (currentFileIndex === -1) {
+                selectFile(0);
+            }
+            
+            isProjectorActive = true;
+            projectorStatus.textContent = 'प्रोजेक्टर: चालू';
+            projectorStatus.style.color = '#2ecc71';
+            
+            const currentFile = uploadedFiles[currentFileIndex];
+            if (currentFile.type === 'video') {
+                cameraView.play().catch(e => {
+                    console.log('Video play error:', e);
+                    showFeedback('वीडियो प्ले नहीं हो सका: ' + e.message, 'error');
+                });
+            }
+            
+            showFeedback(`प्रोजेक्टर मोड शुरू: "${currentFile.name}"`, 'success');
+            console.log('Projector started successfully');
+        }
+
+        // Show on camera - FIXED VERSION
+        function showOnCamera() {
+            console.log('showOnCamera function called');
+            
+            if (uploadedFiles.length === 0) {
+                showFeedback('पहले कोई इमेज या वीडियो अपलोड करें', 'error');
+                return;
+            }
+            
+            // First start the projector
+            startProjector();
+            
+            // Then show camera instructions
+            showFeedback(
+                'कैमरा मोड एक्टिव! अब आप मोबाइल को प्रोजेक्टर की तरह इस्तेमाल कर सकते हैं। ' +
+                'दीवार पर प्रोजेक्ट करने के लिए मोबाइल का कैमरा दीवार की तरफ करें।', 
+                'info'
+            );
+            
+            isCameraActive = true;
+            cameraStatus.textContent = 'कैमरा: एक्टिव';
+            cameraStatus.style.color = '#2ecc71';
+            
+            console.log('Camera mode activated successfully');
+        }
+
+        // Toggle live camera
+        function toggleLiveCamera() {
+            console.log('toggleLiveCamera function called');
+            
+            if (liveStream) {
+                stopLiveCamera();
+            } else {
+                cameraControls.style.display = 'block';
+                showFeedback('कैमरा टाइप चुनें: फ्रंट कैमरा या रियर कैमरा', 'info');
+            }
+        }
+
+        // Start live camera
+        async function startLiveCamera(facingMode) {
+            console.log('startLiveCamera function called with mode:', facingMode);
+            
+            try {
+                showLoader();
+                
+                // Stop any existing stream
+                if (liveStream) {
+                    stopLiveCamera();
+                }
+                
+                const constraints = {
+                    video: { 
+                        facingMode: facingMode,
+                        width: { ideal: 1280 },
+                        height: { ideal: 720 }
+                    } 
+                };
+                
+                liveStream = await navigator.mediaDevices.getUserMedia(constraints);
+                
+                // Hide other displays
+                previewDisplay.style.display = 'none';
+                cameraView.style.display = 'none';
+                emptyPreview.style.display = 'none';
+                
+                // Show live camera
+                liveCameraView.srcObject = liveStream;
+                liveCameraView.style.display = 'block';
+                
+                hideLoader();
+                showFeedback(
+                    `लाइव कैमरा चालू: ${facingMode === 'user' ? 'फ्रंट कैमरा' : 'रियर कैमरा'}`,
+                    'success'
+                );
+                
+                cameraStatus.textContent = `कैमरा: लाइव (${facingMode === 'user' ? 'फ्रंट' : 'रियर'})`;
+                cameraStatus.style.color = '#2ecc71';
+                
+                console.log('Live camera started successfully');
+                
+            } catch (error) {
+                hideLoader();
+                console.error('Camera error:', error);
+                showFeedback('कैमरा एक्सेस error: ' + error.message, 'error');
+            }
+        }
+
+        // Stop live camera
+        function stopLiveCamera() {
+            console.log('stopLiveCamera function called');
+            
+            if (liveStream) {
+                liveStream.getTracks().forEach(track => track.stop());
+                liveStream = null;
+            }
+            
+            liveCameraView.style.display = 'none';
+            cameraControls.style.display = 'none';
+            
+            // Show previous content if available
+            if (uploadedFiles.length > 0 && currentFileIndex >= 0) {
+                const file = uploadedFiles[currentFileIndex];
+                if (file.type === 'image') {
+                    previewDisplay.style.display = 'block';
+                } else {
+                    cameraView.style.display = 'block';
+                }
+            } else {
+                emptyPreview.style.display = 'block';
+            }
+            
+            showFeedback('लाइव कैमरा बंद किया गया', 'info');
+            cameraStatus.textContent = 'कैमरा: बंद';
+            cameraStatus.style.color = '';
+            
+            console.log('Live camera stopped successfully');
+        }
+
+        // Clear all
+        function clearAll() {
+            console.log('clearAll function called');
+            
+            // Stop live camera if active
+            if (liveStream) {
+                stopLiveCamera();
+            }
+            
+            // Clear uploaded files
+            uploadedFiles.forEach(file => {
+                URL.revokeObjectURL(file.url);
+            });
+            
+            uploadedFiles = [];
+            currentFileIndex = -1;
+            isProjectorActive = false;
+            isCameraActive = false;
+            
+            // Reset UI
+            previewDisplay.style.display = 'none';
+            cameraView.style.display = 'none';
+            liveCameraView.style.display = 'none';
+            emptyPreview.style.display = 'block';
+            fileList.style.display = 'none';
+            uploadSection.classList.remove('active');
+            cameraControls.style.display = 'none';
+            
+            fileStatus.textContent = 'कोई फाइल नहीं';
+            cameraStatus.textContent = 'कैमरा: बंद';
+            cameraStatus.style.color = '';
+            projectorStatus.textContent = 'प्रोजेक्टर: बंद';
+            projectorStatus.style.color = '';
+            
+            showFeedback('सभी फाइल्स और सेटिंग्स साफ कर दी गईं', 'success');
+            console.log('All cleared successfully');
+        }
+
+        // Loader functions
+        function showLoader() {
+            loader.style.display = 'block';
+        }
+
+        function hideLoader() {
+            loader.style.display = 'none';
+        }
+
+        // Initialize the application
+        function initializeApp() {
+            console.log('Application initializing...');
+            initializeEventListeners();
+            console.log('Application initialized successfully');
+            
+            // Show welcome message
+            setTimeout(() => {
+                showFeedback('अपलोडर तैयार है! फाइल्स अपलोड करने के लिए क्लिक करें', 'success', 'upload');
+            }, 1000);
+        }
+
+        // Start the application
+        initializeApp();
+
+        // Add global error handler to catch any issues
+        window.addEventListener('error', function(e) {
+            console.error('Global error:', e.error);
+            showFeedback('System error: ' + e.message, 'error');
+        });
+    </script>
+</body>
+</html>
